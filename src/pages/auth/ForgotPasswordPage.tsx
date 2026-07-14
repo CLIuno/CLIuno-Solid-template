@@ -1,6 +1,12 @@
 import { createSignal, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { CircleAlert, CircleCheck, LoaderCircle, Rocket } from 'lucide-solid'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import api from '@/apis'
 
 const ForgotPasswordPage = () => {
@@ -24,63 +30,66 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div class="tw:min-h-screen tw:flex tw:items-center tw:justify-center tw:bg-base-200 tw:px-4">
-      <div class="tw:card tw:w-full tw:max-w-md tw:bg-base-100 tw:shadow-xl">
-        <div class="tw:card-body tw:p-8">
-          <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:mb-2">
-            <Icon icon="mdi:rocket-launch-outline" class="tw:w-8 tw:h-8 tw:text-primary" />
-            <span class="tw:text-2xl tw:font-bold tw:text-primary">CLIuno</span>
+    <div class="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+      <Card class="w-full max-w-sm">
+        <CardHeader class="text-center">
+          {/* Logo */}
+          <div class="mb-2 flex items-center justify-center gap-2">
+            <Rocket class="size-6" />
+            <span class="text-xl font-semibold tracking-tight">CLIuno</span>
           </div>
+          <CardTitle class="text-xl">Forgot Password</CardTitle>
+          <CardDescription>Enter your email to receive a reset link</CardDescription>
+        </CardHeader>
 
-          <h2 class="tw:text-2xl tw:font-bold tw:text-center tw:mb-1">Forgot Password</h2>
-          <p class="tw:text-center tw:text-base-content/60 tw:mb-6">
-            Enter your email to receive a reset link
-          </p>
-
+        <CardContent>
           <Show when={success()}>
-            <div class="tw:alert tw:alert-success tw:mb-4">
-              <Icon icon="mdi:check-circle" class="tw:w-5 tw:h-5" />
-              <span>Reset link sent! Check your email.</span>
-            </div>
+            <Alert class="mb-4">
+              <CircleCheck class="size-4" />
+              <AlertDescription>Reset link sent! Check your email.</AlertDescription>
+            </Alert>
           </Show>
 
           <Show when={error()}>
-            <div class="tw:alert tw:alert-error tw:mb-4">
-              <Icon icon="mdi:alert-circle" class="tw:w-5 tw:h-5" />
-              <span>{error()}</span>
-            </div>
+            <Alert variant="destructive" class="mb-4">
+              <CircleAlert class="size-4" />
+              <AlertDescription>{error()}</AlertDescription>
+            </Alert>
           </Show>
 
           <Show when={!success()}>
-            <form onSubmit={handleSubmit} class="tw:space-y-4">
-              <fieldset class="tw:fieldset">
-                <legend class="tw:fieldset-legend">Email Address</legend>
-                <div class="tw:input tw:w-full">
-                  <Icon icon="mdi:email-outline" class="tw:h-[1em] tw:opacity-50" />
-                  <input
-                    value={email()}
-                    onInput={(e) => setEmail(e.currentTarget.value)}
-                    type="email"
-                    placeholder="Enter your email"
-                    class="tw:grow"
-                    required
-                  />
-                </div>
-              </fieldset>
+            <form onSubmit={handleSubmit} class="space-y-4">
+              <div class="space-y-2">
+                <Label for="forgot-email">Email Address</Label>
+                <Input
+                  id="forgot-email"
+                  value={email()}
+                  onInput={(e) => setEmail(e.currentTarget.value)}
+                  type="email"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
 
-              <button type="submit" class="tw:btn tw:btn-primary tw:w-full" disabled={loading()}>
+              <Button type="submit" class="w-full" disabled={loading()}>
+                <Show when={loading()}>
+                  <LoaderCircle class="size-4 animate-spin" />
+                </Show>
                 {loading() ? 'Sending...' : 'Send Reset Link'}
-              </button>
+              </Button>
             </form>
           </Show>
 
-          <div class="tw:text-center tw:mt-4">
-            <A href="/login" class="tw:link tw:link-primary">
+          <div class="mt-4 text-center">
+            <A
+              href="/login"
+              class="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
               Back to Sign In
             </A>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

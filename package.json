@@ -11,7 +11,8 @@
     "typescript",
     "javascript",
     "tailwindcss",
-    "daisyui"
+    "shadcn",
+    "kobalte"
   ],
   "scripts": {
     "start": "vite",
@@ -29,7 +30,6 @@
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
     "@tailwindcss/vite": "^4.2.2",
-    "daisyui": "^5.5.19",
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",
     "oxfmt": "^0.44.0",
@@ -41,9 +41,13 @@
     "vite-plugin-solid": "^2.11.11"
   },
   "dependencies": {
+    "@kobalte/core": "^0.13.12",
     "@solidjs/router": "^0.16.1",
-    "iconify-icon": "^3.0.2",
     "axios": "^1.14.0",
-    "solid-js": "^1.9.12"
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-solid": "^1.24.0",
+    "solid-js": "^1.9.12",
+    "tailwind-merge": "^3.6.0"
   }
 }

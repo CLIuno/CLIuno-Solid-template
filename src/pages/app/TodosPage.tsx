@@ -1,7 +1,23 @@
 import { createSignal, createMemo, onMount, For, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { ClipboardCheck, LoaderCircle, Plus, Trash2, User } from 'lucide-solid'
+
 import api from '@/apis'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { timeAgo } from '@/utils/helpers'
 
@@ -92,195 +108,161 @@ const TodosPage = () => {
   ]
 
   return (
-    <div class="tw:max-w-4xl tw:mx-auto tw:px-4 tw:py-8">
+    <div class="mx-auto max-w-4xl px-4 py-8">
       {/* Header */}
-      <div class="tw:flex tw:items-center tw:justify-between tw:mb-8">
+      <div class="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 class="tw:text-3xl tw:font-bold tw:text-base-content">Todos</h1>
-          <p class="tw:text-base-content/60">Manage your tasks and collaborate with others</p>
+          <h1 class="text-3xl font-bold tracking-tight">Todos</h1>
+          <p class="text-muted-foreground">Manage your tasks and collaborate with others</p>
         </div>
-        <button onClick={() => setShowCreateModal(true)} class="tw:btn tw:btn-primary">
-          <Icon icon="mdi:plus" class="tw:w-5 tw:h-5" />
+        <Button onClick={() => setShowCreateModal(true)}>
+          <Plus class="size-4" />
           New Todo
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div class="tw:tabs tw:tabs-boxed tw:mb-6 tw:w-fit">
+      <div class="mb-6 inline-flex w-fit items-center gap-1 rounded-lg bg-muted p-1">
         <For each={filters}>
           {(f) => (
-            <button
-              class="tw:tab"
-              classList={{ 'tw:tab-active': filter() === f.key }}
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setFilter(f.key)}
+              class={cn(
+                'text-muted-foreground',
+                filter() === f.key && 'bg-background text-foreground shadow-xs hover:bg-background',
+              )}
             >
               {f.label}
-            </button>
+            </Button>
           )}
         </For>
       </div>
 
       {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
       {/* Empty State */}
       <Show when={!loading() && filteredTodos().length === 0}>
-        <div class="tw:text-center tw:py-20">
-          <Icon
-            icon="mdi:clipboard-check-outline"
-            class="tw:w-16 tw:h-16 tw:mx-auto tw:text-base-content/30"
-          />
-          <h3 class="tw:text-xl tw:font-semibold tw:mt-4">No todos yet</h3>
-          <p class="tw:text-base-content/60 tw:mt-2">Create your first todo to get started!</p>
+        <div class="py-20 text-center">
+          <ClipboardCheck class="mx-auto size-14 text-muted-foreground/40" />
+          <h3 class="mt-4 text-xl font-semibold">No todos yet</h3>
+          <p class="mt-2 text-muted-foreground">Create your first todo to get started!</p>
         </div>
       </Show>
 
       {/* List */}
       <Show when={!loading() && filteredTodos().length > 0}>
-        <div class="tw:space-y-3">
+        <div class="space-y-3">
           <For each={filteredTodos()}>
             {(todo) => (
-              <div class="tw:card tw:bg-base-100 tw:shadow-sm hover:tw:shadow-md tw:transition-shadow">
-                <div class="tw:card-body tw:p-4">
-                  <div class="tw:flex tw:items-start tw:gap-3">
-                    {/* Checkbox */}
-                    <Show
-                      when={todo.user.id === auth.user()?.id}
-                      fallback={
-                        <div class="tw:mt-1 tw:shrink-0">
-                          <Icon
-                            icon={
-                              todo.is_completed
-                                ? 'mdi:checkbox-marked-circle'
-                                : 'mdi:checkbox-blank-circle-outline'
-                            }
-                            class={`tw:w-6 tw:h-6 ${todo.is_completed ? 'tw:text-success' : 'tw:text-base-content/30'}`}
-                          />
-                        </div>
-                      }
-                    >
-                      <button onClick={() => toggleTodo(todo.id)} class="tw:mt-1 tw:shrink-0">
-                        <Icon
-                          icon={
-                            todo.is_completed
-                              ? 'mdi:checkbox-marked-circle'
-                              : 'mdi:checkbox-blank-circle-outline'
-                          }
-                          class={`tw:w-6 tw:h-6 ${todo.is_completed ? 'tw:text-success' : 'tw:text-base-content/30'}`}
-                        />
-                      </button>
-                    </Show>
+              <Card class="transition-shadow hover:shadow-md">
+                <CardContent class="flex items-start gap-3">
+                  {/* Checkbox */}
+                  <Checkbox
+                    checked={todo.is_completed}
+                    onChange={() => toggleTodo(todo.id)}
+                    disabled={todo.user.id !== auth.user()?.id}
+                    class="mt-1"
+                    aria-label={todo.is_completed ? 'Mark as active' : 'Mark as completed'}
+                  />
 
-                    {/* Content */}
-                    <div class="tw:flex-1 tw:min-w-0">
-                      <A href={`/todos/${todo.id}`}>
-                        <h3
-                          class="tw:font-semibold tw:text-lg hover:tw:text-primary tw:transition-colors"
-                          classList={{
-                            'tw:line-through tw:opacity-60': todo.is_completed,
-                          }}
-                        >
-                          {todo.title}
-                        </h3>
+                  {/* Content */}
+                  <div class="min-w-0 flex-1">
+                    <A href={`/todos/${todo.id}`}>
+                      <h3
+                        class={cn(
+                          'text-lg font-semibold transition-colors hover:text-primary',
+                          todo.is_completed && 'text-muted-foreground line-through',
+                        )}
+                      >
+                        {todo.title}
+                      </h3>
+                    </A>
+                    <Show when={todo.description}>
+                      <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {todo.description}
+                      </p>
+                    </Show>
+                    <div class="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                      <A
+                        href={`/users/${todo.user.id}`}
+                        class="flex items-center gap-1 transition-colors hover:text-foreground"
+                      >
+                        <User class="size-3.5" />
+                        {todo.user.username}
                       </A>
-                      <Show when={todo.description}>
-                        <p class="tw:text-base-content/60 tw:text-sm tw:mt-1 tw:line-clamp-2">
-                          {todo.description}
-                        </p>
-                      </Show>
-                      <div class="tw:flex tw:items-center tw:gap-4 tw:mt-2 tw:text-sm tw:text-base-content/50">
-                        <A
-                          href={`/users/${todo.user.id}`}
-                          class="tw:flex tw:items-center tw:gap-1 hover:tw:text-primary"
-                        >
-                          <Icon icon="mdi:account" class="tw:w-4 tw:h-4" />
-                          {todo.user.username}
-                        </A>
-                        <span>{timeAgo(todo.createdAt)}</span>
-                      </div>
+                      <span>{timeAgo(todo.createdAt)}</span>
                     </div>
-
-                    {/* Actions */}
-                    <Show when={todo.user.id === auth.user()?.id}>
-                      <div class="tw:dropdown tw:dropdown-end">
-                        <button class="tw:btn tw:btn-ghost tw:btn-sm tw:btn-circle">
-                          <Icon icon="mdi:dots-vertical" class="tw:w-5 tw:h-5" />
-                        </button>
-                        <ul class="tw:dropdown-content tw:menu tw:p-2 tw:shadow tw:bg-base-100 tw:rounded-box tw:w-40 tw:z-10">
-                          <li>
-                            <A href={`/todos/${todo.id}`}>
-                              <Icon icon="mdi:eye" class="tw:w-4 tw:h-4" /> View
-                            </A>
-                          </li>
-                          <li>
-                            <button onClick={() => deleteTodo(todo.id)} class="tw:text-error">
-                              <Icon icon="mdi:delete" class="tw:w-4 tw:h-4" /> Delete
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
-                    </Show>
                   </div>
-                </div>
-              </div>
+
+                  {/* Actions */}
+                  <Show when={todo.user.id === auth.user()?.id}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => deleteTodo(todo.id)}
+                      class="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete todo"
+                    >
+                      <Trash2 class="size-4" />
+                    </Button>
+                  </Show>
+                </CardContent>
+              </Card>
             )}
           </For>
         </div>
       </Show>
 
-      {/* Create Modal */}
-      <Show when={showCreateModal()}>
-        <div class="tw:modal tw:modal-open">
-          <div class="tw:modal-box">
-            <h3 class="tw:font-bold tw:text-lg tw:mb-4">Create New Todo</h3>
-            <form onSubmit={createTodo} class="tw:space-y-4">
-              <div class="tw:form-control">
-                <div class="tw:label">
-                  <span class="tw:label-text">Title</span>
-                </div>
-                <input
-                  value={newTitle()}
-                  onInput={(e) => setNewTitle(e.currentTarget.value)}
-                  type="text"
-                  placeholder="What needs to be done?"
-                  class="tw:input tw:input-bordered tw:w-full"
-                  required
-                />
-              </div>
-              <div class="tw:form-control">
-                <div class="tw:label">
-                  <span class="tw:label-text">Description (optional)</span>
-                </div>
-                <textarea
-                  value={newDescription()}
-                  onInput={(e) => setNewDescription(e.currentTarget.value)}
-                  placeholder="Add more details..."
-                  class="tw:textarea tw:textarea-bordered tw:w-full"
-                  rows="3"
-                />
-              </div>
-              <div class="tw:modal-action">
-                <button type="button" onClick={() => setShowCreateModal(false)} class="tw:btn">
-                  Cancel
-                </button>
-                <button type="submit" class="tw:btn tw:btn-primary" disabled={creating()}>
-                  {creating() ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-          <button
-            type="button"
-            class="tw:modal-backdrop"
-            onClick={() => setShowCreateModal(false)}
-            aria-label="Close modal"
-          />
-        </div>
-      </Show>
+      {/* Create Dialog */}
+      <Dialog open={showCreateModal()} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Todo</DialogTitle>
+            <DialogDescription>Add a task to your list.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createTodo} class="space-y-4">
+            <div class="space-y-2">
+              <Label for="todo-title">Title</Label>
+              <Input
+                id="todo-title"
+                value={newTitle()}
+                onInput={(e) => setNewTitle(e.currentTarget.value)}
+                type="text"
+                placeholder="What needs to be done?"
+                required
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="todo-description">Description (optional)</Label>
+              <Textarea
+                id="todo-description"
+                value={newDescription()}
+                onInput={(e) => setNewDescription(e.currentTarget.value)}
+                placeholder="Add more details..."
+                rows="3"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating()}>
+                <Show when={creating()}>
+                  <LoaderCircle class="size-4 animate-spin" />
+                </Show>
+                {creating() ? 'Creating...' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

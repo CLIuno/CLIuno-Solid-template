@@ -1,7 +1,22 @@
 import { createSignal, createMemo, onMount, For, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { FileText, LoaderCircle, MessageSquare, Plus, Trash2, User } from 'lucide-solid'
+
 import api from '@/apis'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { timeAgo } from '@/utils/helpers'
 
@@ -72,170 +87,157 @@ const PostsPage = () => {
   onMount(fetchPosts)
 
   return (
-    <div class="tw:max-w-4xl tw:mx-auto tw:px-4 tw:py-8">
+    <div class="mx-auto max-w-4xl px-4 py-8">
       {/* Header */}
-      <div class="tw:flex tw:items-center tw:justify-between tw:mb-8">
+      <div class="mb-8 flex items-center justify-between gap-4">
         <div>
-          <h1 class="tw:text-3xl tw:font-bold tw:text-base-content">Posts</h1>
-          <p class="tw:text-base-content/60">Share and discuss with the community</p>
+          <h1 class="text-3xl font-bold tracking-tight">Posts</h1>
+          <p class="text-muted-foreground">Share and discuss with the community</p>
         </div>
-        <button onClick={() => setShowCreateModal(true)} class="tw:btn tw:btn-primary">
-          <Icon icon="mdi:plus" class="tw:w-5 tw:h-5" />
+        <Button onClick={() => setShowCreateModal(true)}>
+          <Plus class="size-4" />
           New Post
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
-      <div class="tw:tabs tw:tabs-boxed tw:mb-6 tw:w-fit">
-        <button
-          class="tw:tab"
-          classList={{ 'tw:tab-active': filter() === 'all' }}
+      <div class="mb-6 inline-flex w-fit items-center gap-1 rounded-lg bg-muted p-1">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setFilter('all')}
+          class={cn(
+            'text-muted-foreground',
+            filter() === 'all' && 'bg-background text-foreground shadow-xs hover:bg-background',
+          )}
         >
           All
-        </button>
-        <button
-          class="tw:tab"
-          classList={{ 'tw:tab-active': filter() === 'mine' }}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setFilter('mine')}
+          class={cn(
+            'text-muted-foreground',
+            filter() === 'mine' && 'bg-background text-foreground shadow-xs hover:bg-background',
+          )}
         >
           Mine
-        </button>
+        </Button>
       </div>
 
       {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
       {/* Empty State */}
       <Show when={!loading() && filteredPosts().length === 0}>
-        <div class="tw:text-center tw:py-20">
-          <Icon
-            icon="mdi:post-outline"
-            class="tw:w-16 tw:h-16 tw:mx-auto tw:text-base-content/30"
-          />
-          <h3 class="tw:text-xl tw:font-semibold tw:mt-4">No posts yet</h3>
-          <p class="tw:text-base-content/60 tw:mt-2">Create your first post to get started!</p>
+        <div class="py-20 text-center">
+          <FileText class="mx-auto size-14 text-muted-foreground/40" />
+          <h3 class="mt-4 text-xl font-semibold">No posts yet</h3>
+          <p class="mt-2 text-muted-foreground">Create your first post to get started!</p>
         </div>
       </Show>
 
       {/* List */}
       <Show when={!loading() && filteredPosts().length > 0}>
-        <div class="tw:space-y-3">
+        <div class="space-y-3">
           <For each={filteredPosts()}>
             {(post) => (
-              <div class="tw:card tw:bg-base-100 tw:shadow-sm hover:tw:shadow-md tw:transition-shadow">
-                <div class="tw:card-body tw:p-4">
-                  <div class="tw:flex tw:items-start tw:gap-3">
-                    {/* Content */}
-                    <div class="tw:flex-1 tw:min-w-0">
-                      <A href={`/posts/${post.id}`}>
-                        <h3 class="tw:font-semibold tw:text-lg hover:tw:text-primary tw:transition-colors">
-                          {post.title}
-                        </h3>
-                      </A>
-                      <Show when={post.content}>
-                        <p class="tw:text-base-content/60 tw:text-sm tw:mt-1 tw:line-clamp-2">
-                          {post.content}
-                        </p>
-                      </Show>
-                      <div class="tw:flex tw:items-center tw:gap-4 tw:mt-2 tw:text-sm tw:text-base-content/50">
-                        <A
-                          href={`/users/${post.user.id}`}
-                          class="tw:flex tw:items-center tw:gap-1 hover:tw:text-primary"
-                        >
-                          <Icon icon="mdi:account" class="tw:w-4 tw:h-4" />
-                          {post.user.username}
-                        </A>
-                        <span class="tw:flex tw:items-center tw:gap-1">
-                          <Icon icon="mdi:comment-outline" class="tw:w-4 tw:h-4" />
-                          {post.comments?.length || 0}
-                        </span>
-                        <span>{timeAgo(post.createdAt)}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <Show when={post.user.id === auth.user()?.id}>
-                      <div class="tw:dropdown tw:dropdown-end">
-                        <button class="tw:btn tw:btn-ghost tw:btn-sm tw:btn-circle">
-                          <Icon icon="mdi:dots-vertical" class="tw:w-5 tw:h-5" />
-                        </button>
-                        <ul class="tw:dropdown-content tw:menu tw:p-2 tw:shadow tw:bg-base-100 tw:rounded-box tw:w-40 tw:z-10">
-                          <li>
-                            <A href={`/posts/${post.id}`}>
-                              <Icon icon="mdi:eye" class="tw:w-4 tw:h-4" /> View
-                            </A>
-                          </li>
-                          <li>
-                            <button onClick={() => deletePost(post.id)} class="tw:text-error">
-                              <Icon icon="mdi:delete" class="tw:w-4 tw:h-4" /> Delete
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
+              <Card class="transition-shadow hover:shadow-md">
+                <CardContent class="flex items-start gap-3">
+                  {/* Content */}
+                  <div class="min-w-0 flex-1">
+                    <A href={`/posts/${post.id}`}>
+                      <h3 class="text-lg font-semibold transition-colors hover:text-primary">
+                        {post.title}
+                      </h3>
+                    </A>
+                    <Show when={post.content}>
+                      <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
                     </Show>
+                    <div class="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                      <A
+                        href={`/users/${post.user.id}`}
+                        class="flex items-center gap-1 transition-colors hover:text-foreground"
+                      >
+                        <User class="size-3.5" />
+                        {post.user.username}
+                      </A>
+                      <span class="flex items-center gap-1">
+                        <MessageSquare class="size-3.5" />
+                        {post.comments?.length || 0}
+                      </span>
+                      <span>{timeAgo(post.createdAt)}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
+
+                  {/* Actions */}
+                  <Show when={post.user.id === auth.user()?.id}>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => deletePost(post.id)}
+                      class="text-muted-foreground hover:text-destructive"
+                      aria-label="Delete post"
+                    >
+                      <Trash2 class="size-4" />
+                    </Button>
+                  </Show>
+                </CardContent>
+              </Card>
             )}
           </For>
         </div>
       </Show>
 
-      {/* Create Modal */}
-      <Show when={showCreateModal()}>
-        <div class="tw:modal tw:modal-open">
-          <div class="tw:modal-box">
-            <h3 class="tw:font-bold tw:text-lg tw:mb-4">Create New Post</h3>
-            <form onSubmit={createPost} class="tw:space-y-4">
-              <div class="tw:form-control">
-                <div class="tw:label">
-                  <span class="tw:label-text">Title</span>
-                </div>
-                <input
-                  value={newTitle()}
-                  onInput={(e) => setNewTitle(e.currentTarget.value)}
-                  type="text"
-                  placeholder="Post title"
-                  class="tw:input tw:input-bordered tw:w-full"
-                  required
-                />
-              </div>
-              <div class="tw:form-control">
-                <div class="tw:label">
-                  <span class="tw:label-text">Content</span>
-                </div>
-                <textarea
-                  value={newContent()}
-                  onInput={(e) => setNewContent(e.currentTarget.value)}
-                  placeholder="Write your post..."
-                  class="tw:textarea tw:textarea-bordered tw:w-full"
-                  rows="5"
-                  required
-                />
-              </div>
-              <div class="tw:modal-action">
-                <button type="button" onClick={() => setShowCreateModal(false)} class="tw:btn">
-                  Cancel
-                </button>
-                <button type="submit" class="tw:btn tw:btn-primary" disabled={creating()}>
-                  {creating() ? 'Creating...' : 'Create'}
-                </button>
-              </div>
-            </form>
-          </div>
-          <button
-            type="button"
-            class="tw:modal-backdrop"
-            onClick={() => setShowCreateModal(false)}
-            aria-label="Close modal"
-          />
-        </div>
-      </Show>
+      {/* Create Dialog */}
+      <Dialog open={showCreateModal()} onOpenChange={setShowCreateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Post</DialogTitle>
+            <DialogDescription>Share something with the community.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={createPost} class="space-y-4">
+            <div class="space-y-2">
+              <Label for="post-title">Title</Label>
+              <Input
+                id="post-title"
+                value={newTitle()}
+                onInput={(e) => setNewTitle(e.currentTarget.value)}
+                type="text"
+                placeholder="Post title"
+                required
+              />
+            </div>
+            <div class="space-y-2">
+              <Label for="post-content">Content</Label>
+              <Textarea
+                id="post-content"
+                value={newContent()}
+                onInput={(e) => setNewContent(e.currentTarget.value)}
+                placeholder="Write your post..."
+                rows="5"
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating()}>
+                <Show when={creating()}>
+                  <LoaderCircle class="size-4 animate-spin" />
+                </Show>
+                {creating() ? 'Creating...' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,8 +1,47 @@
 import { createSignal, For, Show, createEffect, on } from 'solid-js'
 import { A, useParams } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { ArrowLeft, LoaderCircle, UserCheck, UserPlus, Users as UsersIcon } from 'lucide-solid'
+
 import api from '@/apis'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { useAuth, type User } from '@/stores/auth'
+
+function FollowList(props: Readonly<{ users: User[]; emptyText: string }>) {
+  return (
+    <Show
+      when={props.users.length > 0}
+      fallback={<p class="text-sm text-muted-foreground">{props.emptyText}</p>}
+    >
+      <div class="space-y-1">
+        <For each={props.users}>
+          {(f) => (
+            <A
+              href={`/users/${f.id}`}
+              class="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
+            >
+              <Avatar>
+                <AvatarFallback class="text-xs">
+                  {f.first_name[0]}
+                  {f.last_name[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p class="text-sm font-medium">
+                  {f.first_name} {f.last_name}
+                </p>
+                <p class="text-xs text-muted-foreground">@{f.username}</p>
+              </div>
+            </A>
+          )}
+        </For>
+      </div>
+    </Show>
+  )
+}
 
 const UserProfilePage = () => {
   const params = useParams()
@@ -72,10 +111,17 @@ const UserProfilePage = () => {
   )
 
   return (
-    <div class="tw:max-w-3xl tw:mx-auto tw:px-4 tw:py-8">
+    <div class="mx-auto max-w-3xl px-4 py-8">
+      {/* Back */}
+      <A href="/users" class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-6')}>
+        <ArrowLeft class="size-4" />
+        Back to Users
+      </A>
+
+      {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
@@ -85,113 +131,81 @@ const UserProfilePage = () => {
           return (
             <>
               {/* Profile Card */}
-              <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:mb-6">
-                {/* Cover */}
-                <div class="tw:bg-linear-to-r tw:from-primary tw:to-secondary tw:h-32 tw:rounded-t-2xl" />
-
-                <div class="tw:card-body tw:pt-0">
-                  <div class="tw:flex tw:flex-col sm:tw:flex-row tw:items-center sm:tw:items-end tw:gap-4 tw:-mt-12">
+              <Card class="mb-6">
+                <CardContent class="space-y-4">
+                  <div class="flex items-center gap-4">
                     {/* Avatar */}
-                    <div class="tw:avatar tw:placeholder">
-                      <div class="tw:bg-neutral tw:text-neutral-content tw:w-24 tw:h-24 tw:rounded-full tw:ring-4 tw:ring-base-100">
-                        <span class="tw:text-3xl">
-                          {u.first_name[0]}
-                          {u.last_name[0]}
-                        </span>
-                      </div>
-                    </div>
+                    <Avatar class="size-20">
+                      <AvatarFallback class="text-2xl">
+                        {u.first_name[0]}
+                        {u.last_name[0]}
+                      </AvatarFallback>
+                    </Avatar>
 
-                    <div class="tw:flex-1 tw:text-center sm:tw:text-left">
-                      <h1 class="tw:text-2xl tw:font-bold">
+                    <div class="min-w-0 flex-1">
+                      <h1 class="text-2xl font-bold tracking-tight">
                         {u.first_name} {u.last_name}
                       </h1>
-                      <p class="tw:text-base-content/60">@{u.username}</p>
+                      <p class="text-muted-foreground">@{u.username}</p>
                     </div>
 
                     {/* Follow Button */}
                     <Show when={!isOwnProfile()}>
-                      <button
+                      <Button
+                        variant={isFollowing() ? 'outline' : 'default'}
                         onClick={toggleFollow}
-                        class="tw:btn"
-                        classList={{
-                          'tw:btn-outline': isFollowing(),
-                          'tw:btn-primary': !isFollowing(),
-                        }}
+                        class="shrink-0"
                       >
-                        <Icon
-                          icon={isFollowing() ? 'mdi:account-check' : 'mdi:account-plus'}
-                          class="tw:w-5 tw:h-5"
-                        />
+                        <Show when={isFollowing()} fallback={<UserPlus class="size-4" />}>
+                          <UserCheck class="size-4" />
+                        </Show>
                         {isFollowing() ? 'Following' : 'Follow'}
-                      </button>
+                      </Button>
                     </Show>
                   </div>
 
+                  <Separator />
+
                   {/* Stats */}
-                  <div class="tw:flex tw:justify-center sm:tw:justify-start tw:gap-8 tw:mt-6">
-                    <div class="tw:text-center">
-                      <span class="tw:text-xl tw:font-bold">{followers().length}</span>
-                      <p class="tw:text-sm tw:text-base-content/60">Followers</p>
-                    </div>
-                    <div class="tw:text-center">
-                      <span class="tw:text-xl tw:font-bold">{following().length}</span>
-                      <p class="tw:text-sm tw:text-base-content/60">Following</p>
-                    </div>
+                  <div class="flex gap-6 text-sm">
+                    <p>
+                      <span class="font-semibold">{followers().length}</span>{' '}
+                      <span class="text-muted-foreground">Followers</span>
+                    </p>
+                    <p>
+                      <span class="font-semibold">{following().length}</span>{' '}
+                      <span class="text-muted-foreground">Following</span>
+                    </p>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              {/* Followers / Following Lists */}
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle class="flex items-center gap-2 text-base">
+                      <UsersIcon class="size-4" />
+                      Followers ({followers().length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FollowList users={followers()} emptyText="No followers yet" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle class="flex items-center gap-2 text-base">
+                      <UserCheck class="size-4" />
+                      Following ({following().length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FollowList users={following()} emptyText="Not following anyone yet" />
+                  </CardContent>
+                </Card>
               </div>
-
-              {/* Followers */}
-              <Show when={followers().length > 0}>
-                <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:mb-6">
-                  <div class="tw:card-body">
-                    <h2 class="tw:text-lg tw:font-bold tw:mb-3">Followers</h2>
-                    <div class="tw:flex tw:flex-wrap tw:gap-3">
-                      <For each={followers()}>
-                        {(f) => (
-                          <A
-                            href={`/users/${f.id}`}
-                            class="tw:flex tw:items-center tw:gap-2 tw:bg-base-200 tw:rounded-full tw:px-3 tw:py-1 hover:tw:bg-base-300 tw:transition-colors"
-                          >
-                            <div class="tw:avatar tw:placeholder">
-                              <div class="tw:bg-primary tw:text-primary-content tw:w-6 tw:h-6 tw:rounded-full">
-                                <span class="tw:text-xs">{f.first_name[0]}</span>
-                              </div>
-                            </div>
-                            <span class="tw:text-sm">{f.username}</span>
-                          </A>
-                        )}
-                      </For>
-                    </div>
-                  </div>
-                </div>
-              </Show>
-
-              {/* Following */}
-              <Show when={following().length > 0}>
-                <div class="tw:card tw:bg-base-100 tw:shadow-lg">
-                  <div class="tw:card-body">
-                    <h2 class="tw:text-lg tw:font-bold tw:mb-3">Following</h2>
-                    <div class="tw:flex tw:flex-wrap tw:gap-3">
-                      <For each={following()}>
-                        {(f) => (
-                          <A
-                            href={`/users/${f.id}`}
-                            class="tw:flex tw:items-center tw:gap-2 tw:bg-base-200 tw:rounded-full tw:px-3 tw:py-1 hover:tw:bg-base-300 tw:transition-colors"
-                          >
-                            <div class="tw:avatar tw:placeholder">
-                              <div class="tw:bg-secondary tw:text-secondary-content tw:w-6 tw:h-6 tw:rounded-full">
-                                <span class="tw:text-xs">{f.first_name[0]}</span>
-                              </div>
-                            </div>
-                            <span class="tw:text-sm">{f.username}</span>
-                          </A>
-                        )}
-                      </For>
-                    </div>
-                  </div>
-                </div>
-              </Show>
             </>
           )
         }}

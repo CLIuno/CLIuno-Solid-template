@@ -1,6 +1,14 @@
 import { createSignal, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { CircleAlert, Eye, EyeOff, LoaderCircle, Rocket } from 'lucide-solid'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 
 const RegisterPage = () => {
@@ -41,173 +49,159 @@ const RegisterPage = () => {
   }
 
   return (
-    <div class="tw:min-h-screen tw:flex tw:items-center tw:justify-center tw:bg-base-200 tw:px-4 tw:py-8">
-      <div class="tw:card tw:w-full tw:max-w-lg tw:bg-base-100 tw:shadow-xl">
-        <div class="tw:card-body tw:p-8">
+    <div class="flex min-h-screen items-center justify-center bg-background px-4 py-8 text-foreground">
+      <Card class="w-full max-w-sm">
+        <CardHeader class="text-center">
           {/* Logo */}
-          <div class="tw:flex tw:items-center tw:justify-center tw:gap-2 tw:mb-2">
-            <Icon icon="mdi:rocket-launch-outline" class="tw:w-8 tw:h-8 tw:text-primary" />
-            <span class="tw:text-2xl tw:font-bold tw:text-primary">CLIuno</span>
+          <div class="mb-2 flex items-center justify-center gap-2">
+            <Rocket class="size-6" />
+            <span class="text-xl font-semibold tracking-tight">CLIuno</span>
           </div>
+          <CardTitle class="text-xl">Create Account</CardTitle>
+          <CardDescription>Join the community</CardDescription>
+        </CardHeader>
 
-          <h2 class="tw:text-2xl tw:font-bold tw:text-center tw:mb-1">Create Account</h2>
-          <p class="tw:text-center tw:text-base-content/60 tw:mb-6">Join the community</p>
-
+        <CardContent>
           {/* Error Alert */}
           <Show when={auth.error()}>
-            <div class="tw:alert tw:alert-error tw:mb-4">
-              <Icon icon="mdi:alert-circle" class="tw:w-5 tw:h-5" />
-              <span>{auth.error()}</span>
-            </div>
+            <Alert variant="destructive" class="mb-4">
+              <CircleAlert class="size-4" />
+              <AlertDescription>{auth.error()}</AlertDescription>
+            </Alert>
           </Show>
 
-          <form onSubmit={handleRegister} class="tw:space-y-4">
+          <form onSubmit={handleRegister} class="space-y-4">
             {/* Name Row */}
-            <div class="tw:grid tw:grid-cols-2 tw:gap-4">
-              <fieldset class="tw:fieldset">
-                <legend class="tw:fieldset-legend">First Name</legend>
-                <input
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <Label for="register-first-name">First Name</Label>
+                <Input
+                  id="register-first-name"
                   value={form().first_name}
                   onInput={(e) => updateField('first_name', e.currentTarget.value)}
                   type="text"
                   placeholder="John"
-                  class="tw:input tw:w-full"
                   required
                 />
-              </fieldset>
-              <fieldset class="tw:fieldset">
-                <legend class="tw:fieldset-legend">Last Name</legend>
-                <input
+              </div>
+              <div class="space-y-2">
+                <Label for="register-last-name">Last Name</Label>
+                <Input
+                  id="register-last-name"
                   value={form().last_name}
                   onInput={(e) => updateField('last_name', e.currentTarget.value)}
                   type="text"
                   placeholder="Doe"
-                  class="tw:input tw:w-full"
                   required
                 />
-              </fieldset>
+              </div>
             </div>
 
             {/* Username */}
-            <fieldset class="tw:fieldset">
-              <legend class="tw:fieldset-legend">Username</legend>
-              <div class="tw:input tw:w-full">
-                <Icon icon="mdi:at" class="tw:h-[1em] tw:opacity-50" />
-                <input
-                  value={form().username}
-                  onInput={(e) => updateField('username', e.currentTarget.value)}
-                  type="text"
-                  placeholder="johndoe"
-                  class="tw:grow"
-                  required
-                />
-              </div>
-            </fieldset>
+            <div class="space-y-2">
+              <Label for="register-username">Username</Label>
+              <Input
+                id="register-username"
+                value={form().username}
+                onInput={(e) => updateField('username', e.currentTarget.value)}
+                type="text"
+                placeholder="johndoe"
+                required
+              />
+            </div>
 
             {/* Email */}
-            <fieldset class="tw:fieldset">
-              <legend class="tw:fieldset-legend">Email</legend>
-              <div class="tw:input tw:w-full">
-                <Icon icon="mdi:email-outline" class="tw:h-[1em] tw:opacity-50" />
-                <input
-                  value={form().email}
-                  onInput={(e) => updateField('email', e.currentTarget.value)}
-                  type="email"
-                  placeholder="john@example.com"
-                  class="tw:grow"
-                  required
-                />
-              </div>
-            </fieldset>
+            <div class="space-y-2">
+              <Label for="register-email">Email</Label>
+              <Input
+                id="register-email"
+                value={form().email}
+                onInput={(e) => updateField('email', e.currentTarget.value)}
+                type="email"
+                placeholder="john@example.com"
+                required
+              />
+            </div>
 
             {/* Phone */}
-            <fieldset class="tw:fieldset">
-              <legend class="tw:fieldset-legend">Phone</legend>
-              <div class="tw:input tw:w-full">
-                <Icon icon="mdi:phone-outline" class="tw:h-[1em] tw:opacity-50" />
-                <input
-                  value={form().phone}
-                  onInput={(e) => updateField('phone', e.currentTarget.value)}
-                  type="tel"
-                  placeholder="+966512345678"
-                  class="tw:grow"
-                  required
-                />
-              </div>
-            </fieldset>
+            <div class="space-y-2">
+              <Label for="register-phone">Phone</Label>
+              <Input
+                id="register-phone"
+                value={form().phone}
+                onInput={(e) => updateField('phone', e.currentTarget.value)}
+                type="tel"
+                placeholder="+966512345678"
+                required
+              />
+            </div>
 
             {/* Password */}
-            <fieldset class="tw:fieldset">
-              <legend class="tw:fieldset-legend">Password</legend>
-              <div class="tw:input tw:w-full">
-                <Icon icon="mdi:lock-outline" class="tw:h-[1em] tw:opacity-50" />
-                <input
+            <div class="space-y-2">
+              <Label for="register-password">Password</Label>
+              <div class="relative">
+                <Input
+                  id="register-password"
                   value={form().password}
                   onInput={(e) => updateField('password', e.currentTarget.value)}
                   type={showPassword() ? 'text' : 'password'}
                   placeholder="Min 8 characters"
-                  class="tw:grow"
+                  class="pr-10"
                   required
                   minLength={8}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword())}
-                  class="tw:btn tw:btn-ghost tw:btn-xs tw:btn-circle"
+                  class="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={showPassword() ? 'Hide password' : 'Show password'}
                 >
-                  <Icon icon={showPassword() ? 'mdi:eye-off' : 'mdi:eye'} class="tw:w-4 tw:h-4" />
+                  <Show when={showPassword()} fallback={<Eye class="size-4" />}>
+                    <EyeOff class="size-4" />
+                  </Show>
                 </button>
               </div>
-            </fieldset>
+            </div>
 
             {/* Confirm Password */}
-            <fieldset class="tw:fieldset">
-              <legend class="tw:fieldset-legend">Confirm Password</legend>
-              <div
-                class="tw:input tw:w-full"
-                classList={{
-                  'tw:input-error': !!form().password_confirmation && !passwordsMatch(),
-                }}
-              >
-                <Icon icon="mdi:lock-check-outline" class="tw:h-[1em] tw:opacity-50" />
-                <input
-                  value={form().password_confirmation}
-                  onInput={(e) => updateField('password_confirmation', e.currentTarget.value)}
-                  type={showPassword() ? 'text' : 'password'}
-                  placeholder="Confirm your password"
-                  class="tw:grow"
-                  required
-                />
-              </div>
+            <div class="space-y-2">
+              <Label for="register-password-confirmation">Confirm Password</Label>
+              <Input
+                id="register-password-confirmation"
+                value={form().password_confirmation}
+                onInput={(e) => updateField('password_confirmation', e.currentTarget.value)}
+                type={showPassword() ? 'text' : 'password'}
+                placeholder="Confirm your password"
+                aria-invalid={!!form().password_confirmation && !passwordsMatch()}
+                required
+              />
               <Show when={form().password_confirmation && !passwordsMatch()}>
-                <p class="tw:label tw:text-error">Passwords do not match</p>
+                <p class="text-sm text-destructive">Passwords do not match</p>
               </Show>
-            </fieldset>
+            </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              class="tw:btn tw:btn-primary tw:w-full"
-              classList={{ 'tw:loading': auth.loading() }}
-              disabled={auth.loading() || !isFormValid()}
-            >
-              <Show when={!auth.loading()}>
-                <Icon icon="mdi:account-plus-outline" class="tw:w-5 tw:h-5" />
+            <Button type="submit" class="w-full" disabled={auth.loading() || !isFormValid()}>
+              <Show when={auth.loading()}>
+                <LoaderCircle class="size-4 animate-spin" />
               </Show>
               {auth.loading() ? 'Creating account...' : 'Create Account'}
-            </button>
+            </Button>
           </form>
 
           {/* Divider */}
-          <div class="tw:divider tw:text-sm">Already have an account?</div>
+          <div class="my-6 flex items-center gap-3">
+            <Separator class="flex-1" />
+            <span class="text-xs text-muted-foreground">Already have an account?</span>
+            <Separator class="flex-1" />
+          </div>
 
           {/* Login Link */}
-          <A href="/login" class="tw:btn tw:btn-outline tw:w-full">
-            <Icon icon="mdi:login" class="tw:w-5 tw:h-5" />
+          <A href="/login" class={cn(buttonVariants({ variant: 'outline' }), 'w-full')}>
             Sign In
           </A>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

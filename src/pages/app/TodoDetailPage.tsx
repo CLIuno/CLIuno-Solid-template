@@ -1,7 +1,15 @@
 import { createSignal, onMount, Show } from 'solid-js'
 import { A, useParams } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { ArrowLeft, Check, LoaderCircle, Pencil, Undo2, User } from 'lucide-solid'
+
 import api from '@/apis'
+import { Badge } from '@/components/ui/badge'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { timeAgo } from '@/utils/helpers'
 
@@ -76,17 +84,17 @@ const TodoDetailPage = () => {
   onMount(fetchTodo)
 
   return (
-    <div class="tw:max-w-3xl tw:mx-auto tw:px-4 tw:py-8">
+    <div class="mx-auto max-w-3xl px-4 py-8">
       {/* Back */}
-      <A href="/todos" class="tw:btn tw:btn-ghost tw:btn-sm tw:mb-6">
-        <Icon icon="mdi:arrow-left" class="tw:w-5 tw:h-5" />
+      <A href="/todos" class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-6')}>
+        <ArrowLeft class="size-4" />
         Back to Todos
       </A>
 
       {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
@@ -94,101 +102,91 @@ const TodoDetailPage = () => {
         {(todoAccessor) => {
           const t = todoAccessor()
           return (
-            <div class="tw:card tw:bg-base-100 tw:shadow-lg">
-              <div class="tw:card-body">
+            <Card>
+              <CardContent class="space-y-4">
                 <Show
                   when={!editing()}
                   fallback={
-                    <form onSubmit={saveEdit} class="tw:space-y-4">
-                      <input
+                    <form onSubmit={saveEdit} class="space-y-4">
+                      <Input
                         value={editTitle()}
                         onInput={(e) => setEditTitle(e.currentTarget.value)}
                         type="text"
-                        class="tw:input tw:input-bordered tw:w-full tw:text-xl tw:font-bold"
+                        class="text-lg font-semibold"
                       />
-                      <textarea
+                      <Textarea
                         value={editDescription()}
                         onInput={(e) => setEditDescription(e.currentTarget.value)}
-                        class="tw:textarea tw:textarea-bordered tw:w-full"
                         rows="3"
                       />
-                      <div class="tw:flex tw:gap-2 tw:justify-end">
-                        <button
+                      <div class="flex justify-end gap-2">
+                        <Button
                           type="button"
+                          variant="outline"
+                          size="sm"
                           onClick={() => setEditing(false)}
-                          class="tw:btn tw:btn-sm"
                         >
                           Cancel
-                        </button>
-                        <button type="submit" class="tw:btn tw:btn-sm tw:btn-primary">
+                        </Button>
+                        <Button type="submit" size="sm">
                           Save
-                        </button>
+                        </Button>
                       </div>
                     </form>
                   }
                 >
-                  <div class="tw:flex tw:items-start tw:justify-between">
+                  <div class="flex items-start justify-between gap-4">
                     <div>
-                      <div class="tw:flex tw:items-center tw:gap-3 tw:mb-2">
-                        <span
-                          class="tw:badge"
-                          classList={{
-                            'tw:badge-success': t.is_completed,
-                            'tw:badge-warning': !t.is_completed,
-                          }}
-                        >
-                          {t.is_completed ? 'Completed' : 'Active'}
-                        </span>
-                      </div>
+                      <Badge variant={t.is_completed ? 'secondary' : 'outline'} class="mb-2">
+                        {t.is_completed ? 'Completed' : 'Active'}
+                      </Badge>
                       <h1
-                        class="tw:text-2xl tw:font-bold"
-                        classList={{
-                          'tw:line-through tw:opacity-60': t.is_completed,
-                        }}
+                        class={cn(
+                          'text-2xl font-bold tracking-tight',
+                          t.is_completed && 'text-muted-foreground line-through',
+                        )}
                       >
                         {t.title}
                       </h1>
                       <Show when={t.description}>
-                        <p class="tw:mt-3 tw:text-base-content/70">{t.description}</p>
+                        <p class="mt-3 text-muted-foreground">{t.description}</p>
                       </Show>
                     </div>
                     <Show when={t.user.id === auth.user()?.id}>
-                      <div class="tw:flex tw:gap-2">
-                        <button
-                          onClick={toggleComplete}
-                          class="tw:btn tw:btn-sm tw:btn-outline"
-                          classList={{
-                            'tw:btn-warning': t.is_completed,
-                            'tw:btn-success': !t.is_completed,
-                          }}
-                        >
-                          <Icon
-                            icon={t.is_completed ? 'mdi:undo' : 'mdi:check'}
-                            class="tw:w-4 tw:h-4"
-                          />
+                      <div class="flex shrink-0 gap-2">
+                        <Button variant="outline" size="sm" onClick={toggleComplete}>
+                          <Show when={t.is_completed} fallback={<Check class="size-4" />}>
+                            <Undo2 class="size-4" />
+                          </Show>
                           {t.is_completed ? 'Reopen' : 'Complete'}
-                        </button>
-                        <button onClick={startEdit} class="tw:btn tw:btn-sm tw:btn-outline">
-                          <Icon icon="mdi:pencil" class="tw:w-4 tw:h-4" />
-                        </button>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          onClick={startEdit}
+                          aria-label="Edit todo"
+                        >
+                          <Pencil class="size-4" />
+                        </Button>
                       </div>
                     </Show>
                   </div>
                 </Show>
 
                 {/* Meta */}
-                <div class="tw:flex tw:items-center tw:gap-4 tw:mt-4 tw:pt-4 tw:border-t tw:border-base-200 tw:text-sm tw:text-base-content/50">
+                <Separator />
+                <div class="flex items-center gap-4 text-sm text-muted-foreground">
                   <A
                     href={`/users/${t.user.id}`}
-                    class="tw:flex tw:items-center tw:gap-1 hover:tw:text-primary"
+                    class="flex items-center gap-1 transition-colors hover:text-foreground"
                   >
-                    <Icon icon="mdi:account" class="tw:w-4 tw:h-4" />
+                    <User class="size-3.5" />
                     {t.user.first_name} {t.user.last_name} (@{t.user.username})
                   </A>
                   <span>{timeAgo(t.createdAt)}</span>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )
         }}
       </Show>

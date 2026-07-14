@@ -1,7 +1,15 @@
 import { createSignal, onMount, For, Show } from 'solid-js'
 import { A, useParams } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { ArrowLeft, LoaderCircle, MessageSquare, Pencil, Send, Trash2, User } from 'lucide-solid'
+
 import api from '@/apis'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
 import { useAuth } from '@/stores/auth'
 import { timeAgo } from '@/utils/helpers'
 
@@ -128,17 +136,17 @@ const PostDetailPage = () => {
   onMount(fetchPost)
 
   return (
-    <div class="tw:max-w-3xl tw:mx-auto tw:px-4 tw:py-8">
+    <div class="mx-auto max-w-3xl px-4 py-8">
       {/* Back */}
-      <A href="/posts" class="tw:btn tw:btn-ghost tw:btn-sm tw:mb-6">
-        <Icon icon="mdi:arrow-left" class="tw:w-5 tw:h-5" />
+      <A href="/posts" class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-6')}>
+        <ArrowLeft class="size-4" />
         Back to Posts
       </A>
 
       {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
@@ -148,178 +156,180 @@ const PostDetailPage = () => {
           return (
             <>
               {/* Detail Card */}
-              <div class="tw:card tw:bg-base-100 tw:shadow-lg tw:mb-6">
-                <div class="tw:card-body">
+              <Card class="mb-6">
+                <CardContent class="space-y-4">
                   <Show
                     when={!editing()}
                     fallback={
-                      <form onSubmit={saveEdit} class="tw:space-y-4">
-                        <input
+                      <form onSubmit={saveEdit} class="space-y-4">
+                        <Input
                           value={editTitle()}
                           onInput={(e) => setEditTitle(e.currentTarget.value)}
                           type="text"
-                          class="tw:input tw:input-bordered tw:w-full tw:text-xl tw:font-bold"
+                          class="text-lg font-semibold"
                         />
-                        <textarea
+                        <Textarea
                           value={editContent()}
                           onInput={(e) => setEditContent(e.currentTarget.value)}
-                          class="tw:textarea tw:textarea-bordered tw:w-full"
                           rows="5"
                         />
-                        <div class="tw:flex tw:gap-2 tw:justify-end">
-                          <button
+                        <div class="flex justify-end gap-2">
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => setEditing(false)}
-                            class="tw:btn tw:btn-sm"
                           >
                             Cancel
-                          </button>
-                          <button type="submit" class="tw:btn tw:btn-sm tw:btn-primary">
+                          </Button>
+                          <Button type="submit" size="sm">
                             Save
-                          </button>
+                          </Button>
                         </div>
                       </form>
                     }
                   >
-                    <div class="tw:flex tw:items-start tw:justify-between">
-                      <div>
-                        <h1 class="tw:text-2xl tw:font-bold">{p.title}</h1>
+                    <div class="flex items-start justify-between gap-4">
+                      <div class="min-w-0">
+                        <h1 class="text-2xl font-bold tracking-tight">{p.title}</h1>
                         <Show when={p.content}>
-                          <p class="tw:mt-3 tw:text-base-content/70">{p.content}</p>
+                          <p class="mt-3 text-muted-foreground">{p.content}</p>
                         </Show>
                       </div>
                       <Show when={p.user.id === auth.user()?.id}>
-                        <div class="tw:flex tw:gap-2">
-                          <button onClick={startEdit} class="tw:btn tw:btn-sm tw:btn-outline">
-                            <Icon icon="mdi:pencil" class="tw:w-4 tw:h-4" />
-                          </button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          onClick={startEdit}
+                          class="shrink-0"
+                          aria-label="Edit post"
+                        >
+                          <Pencil class="size-4" />
+                        </Button>
                       </Show>
                     </div>
                   </Show>
 
                   {/* Meta */}
-                  <div class="tw:flex tw:items-center tw:gap-4 tw:mt-4 tw:pt-4 tw:border-t tw:border-base-200 tw:text-sm tw:text-base-content/50">
+                  <Separator />
+                  <div class="flex items-center gap-4 text-sm text-muted-foreground">
                     <A
                       href={`/users/${p.user.id}`}
-                      class="tw:flex tw:items-center tw:gap-1 hover:tw:text-primary"
+                      class="flex items-center gap-1 transition-colors hover:text-foreground"
                     >
-                      <Icon icon="mdi:account" class="tw:w-4 tw:h-4" />
+                      <User class="size-3.5" />
                       {p.user.first_name} {p.user.last_name} (@{p.user.username})
                     </A>
                     <span>{timeAgo(p.createdAt)}</span>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Comments Section */}
-              <div class="tw:card tw:bg-base-100 tw:shadow-lg">
-                <div class="tw:card-body">
-                  <h2 class="tw:text-xl tw:font-bold tw:mb-4">
-                    <Icon
-                      icon="mdi:comment-multiple-outline"
-                      class="tw:w-6 tw:h-6 tw:inline tw:mr-1"
-                    />
+              <Card>
+                <CardHeader>
+                  <CardTitle class="flex items-center gap-2 text-lg">
+                    <MessageSquare class="size-5" />
                     Comments ({p.comments?.length || 0})
-                  </h2>
-
+                  </CardTitle>
+                </CardHeader>
+                <CardContent class="space-y-6">
                   {/* Add Comment */}
-                  <form onSubmit={addComment} class="tw:mb-6">
-                    <div class="tw:flex tw:gap-2">
-                      <input
-                        value={newComment()}
-                        onInput={(e) => setNewComment(e.currentTarget.value)}
-                        type="text"
-                        placeholder="Write a comment..."
-                        class="tw:input tw:input-bordered tw:flex-1"
-                        required
-                      />
-                      <button
-                        type="submit"
-                        class="tw:btn tw:btn-primary"
-                        disabled={submittingComment()}
-                      >
-                        <Icon icon="mdi:send" class="tw:w-5 tw:h-5" />
-                      </button>
-                    </div>
+                  <form onSubmit={addComment} class="flex gap-2">
+                    <Input
+                      value={newComment()}
+                      onInput={(e) => setNewComment(e.currentTarget.value)}
+                      type="text"
+                      placeholder="Write a comment..."
+                      class="flex-1"
+                      required
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={submittingComment()}
+                      aria-label="Send comment"
+                    >
+                      <Show when={submittingComment()} fallback={<Send class="size-4" />}>
+                        <LoaderCircle class="size-4 animate-spin" />
+                      </Show>
+                    </Button>
                   </form>
 
                   {/* Comments List */}
                   <Show
                     when={p.comments?.length}
                     fallback={
-                      <div class="tw:text-center tw:py-8 tw:text-base-content/40">
-                        <Icon
-                          icon="mdi:comment-off-outline"
-                          class="tw:w-10 tw:h-10 tw:mx-auto tw:mb-2"
-                        />
+                      <div class="py-8 text-center text-muted-foreground">
+                        <MessageSquare class="mx-auto mb-2 size-10 text-muted-foreground/40" />
                         <p>No comments yet. Be the first!</p>
                       </div>
                     }
                   >
-                    <div class="tw:space-y-4">
+                    <div class="space-y-4">
                       <For each={p.comments}>
                         {(comment) => (
-                          <div class="tw:flex tw:gap-3">
-                            <div class="tw:avatar tw:placeholder">
-                              <div class="tw:bg-neutral tw:text-neutral-content tw:w-8 tw:h-8 tw:rounded-full">
-                                <span class="tw:text-xs">
-                                  {comment.user.first_name[0]}
-                                  {comment.user.last_name[0]}
-                                </span>
-                              </div>
-                            </div>
-                            <div class="tw:flex-1 tw:bg-base-200 tw:rounded-lg tw:p-3">
-                              <div class="tw:flex tw:items-center tw:justify-between tw:mb-1">
+                          <div class="flex gap-3">
+                            <Avatar>
+                              <AvatarFallback class="text-xs">
+                                {comment.user.first_name[0]}
+                                {comment.user.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div class="min-w-0 flex-1 rounded-lg bg-muted p-3">
+                              <div class="mb-1 flex items-center justify-between gap-2">
                                 <A
                                   href={`/users/${comment.user.id}`}
-                                  class="tw:font-semibold tw:text-sm hover:tw:text-primary"
+                                  class="text-sm font-semibold transition-colors hover:text-primary"
                                 >
                                   {comment.user.username}
                                 </A>
-                                <div class="tw:flex tw:items-center tw:gap-2">
-                                  <span class="tw:text-xs tw:text-base-content/50">
+                                <div class="flex items-center gap-1">
+                                  <span class="text-xs text-muted-foreground">
                                     {timeAgo(comment.createdAt)}
                                   </span>
                                   <Show when={comment.user.id === auth.user()?.id}>
-                                    <button
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-sm"
                                       onClick={() => startEditComment(comment)}
-                                      class="tw:btn tw:btn-ghost tw:btn-xs"
+                                      aria-label="Edit comment"
                                     >
-                                      <Icon icon="mdi:pencil" class="tw:w-3 tw:h-3" />
-                                    </button>
-                                    <button
+                                      <Pencil class="size-3.5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-sm"
                                       onClick={() => deleteComment(comment.id)}
-                                      class="tw:btn tw:btn-ghost tw:btn-xs tw:text-error"
+                                      class="text-muted-foreground hover:text-destructive"
+                                      aria-label="Delete comment"
                                     >
-                                      <Icon icon="mdi:delete" class="tw:w-3 tw:h-3" />
-                                    </button>
+                                      <Trash2 class="size-3.5" />
+                                    </Button>
                                   </Show>
                                 </div>
                               </div>
 
                               <Show
                                 when={editingCommentId() === comment.id}
-                                fallback={<p class="tw:text-sm">{comment.content}</p>}
+                                fallback={<p class="text-sm">{comment.content}</p>}
                               >
-                                <div class="tw:flex tw:gap-2">
-                                  <input
+                                <div class="flex gap-2">
+                                  <Input
                                     value={editCommentContent()}
                                     onInput={(e) => setEditCommentContent(e.currentTarget.value)}
-                                    class="tw:input tw:input-sm tw:input-bordered tw:flex-1"
+                                    class="flex-1 bg-background"
                                   />
-                                  <button
-                                    onClick={() => saveEditComment(comment.id)}
-                                    class="tw:btn tw:btn-sm tw:btn-primary"
-                                  >
+                                  <Button size="sm" onClick={() => saveEditComment(comment.id)}>
                                     Save
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() => setEditingCommentId(null)}
-                                    class="tw:btn tw:btn-sm"
                                   >
                                     Cancel
-                                  </button>
+                                  </Button>
                                 </div>
                               </Show>
                             </div>
@@ -328,8 +338,8 @@ const PostDetailPage = () => {
                       </For>
                     </div>
                   </Show>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </>
           )
         }}

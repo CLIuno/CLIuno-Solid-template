@@ -2,6 +2,7 @@
   "compilerOptions": {
     "ignoreDeprecations": "6.0",
     "strict": true,
+    "skipLibCheck": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",

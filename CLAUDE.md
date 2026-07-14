@@ -19,8 +19,6 @@ pnpm format     # oxfmt src/
 - `src/stores/auth.ts` — signals-based auth store.
 - `src/pages/` — pages; routing via `@solidjs/router` (`Route component=` layouts take
   `Readonly<{ children?: any }>` props).
-- `src/components/Icon.tsx` — `iconify-icon` web component (its JSX typing is declared
-  there — extend that declaration if you add attributes).
 
 ## The API contract (what backends guarantee)
 
@@ -34,4 +32,8 @@ Keep all URLs inside `src/apis/`.
 - oxc tooling: `oxlint` + `oxfmt` (`semi: false`, single quotes); prettier for css/md/html.
 - Solid reactivity: use `createEffect(on(...))` for param-driven reloads — never
   tautological conditions to force tracking.
-- TypeScript 6.0; conventional commits; Tailwind v4 + daisyUI with `tw:` prefix.
+- TypeScript 6.0; conventional commits; Tailwind v4 (no prefix) + **shadcn-style UI on
+  Kobalte primitives** — components vendored by hand in `src/components/ui/`, `cn()` in
+  `src/lib/utils.ts`, theme tokens in `src/assets/index.css`, dark mode = `.dark` class
+  on `<html>` + `localStorage('theme')` (see `src/utils/theme.ts`); icons from
+  `lucide-solid`.

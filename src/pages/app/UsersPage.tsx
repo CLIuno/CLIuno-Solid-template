@@ -1,7 +1,11 @@
 import { createSignal, onMount, For, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import Icon from '@/components/Icon'
+import { LoaderCircle, UserCheck, UserPlus, Users as UsersIcon } from 'lucide-solid'
+
 import api from '@/apis'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/stores/auth'
 
 interface User {
@@ -59,72 +63,68 @@ const UsersPage = () => {
   onMount(fetchUsers)
 
   return (
-    <div class="tw:max-w-4xl tw:mx-auto tw:px-4 tw:py-8">
-      <div class="tw:mb-8">
-        <h1 class="tw:text-3xl tw:font-bold tw:text-base-content">Users</h1>
-        <p class="tw:text-base-content/60">Discover and follow other users</p>
+    <div class="mx-auto max-w-4xl px-4 py-8">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold tracking-tight">Users</h1>
+        <p class="text-muted-foreground">Discover and follow other users</p>
       </div>
 
+      {/* Loading */}
       <Show when={loading()}>
-        <div class="tw:flex tw:justify-center tw:py-20">
-          <span class="tw:loading tw:loading-spinner tw:loading-lg tw:text-primary" />
+        <div class="flex justify-center py-20">
+          <LoaderCircle class="size-8 animate-spin text-muted-foreground" />
         </div>
       </Show>
 
+      {/* Empty State */}
       <Show when={!loading() && users().length === 0}>
-        <div class="tw:text-center tw:py-20">
-          <Icon
-            icon="mdi:account-group-outline"
-            class="tw:w-16 tw:h-16 tw:mx-auto tw:text-base-content/30"
-          />
-          <h3 class="tw:text-xl tw:font-semibold tw:mt-4">No other users yet</h3>
+        <div class="py-20 text-center">
+          <UsersIcon class="mx-auto size-14 text-muted-foreground/40" />
+          <h3 class="mt-4 text-xl font-semibold">No other users yet</h3>
+          <p class="mt-2 text-muted-foreground">Be the first to invite someone!</p>
         </div>
       </Show>
 
+      {/* List */}
       <Show when={!loading() && users().length > 0}>
-        <div class="tw:grid tw:grid-cols-1 md:tw:grid-cols-2 tw:gap-4">
+        <div class="space-y-3">
           <For each={users()}>
             {(user) => (
-              <div class="tw:card tw:bg-base-100 tw:shadow-sm hover:tw:shadow-md tw:transition-shadow">
-                <div class="tw:card-body tw:p-4 tw:flex tw:flex-row tw:items-center tw:gap-4">
+              <Card class="transition-shadow hover:shadow-md">
+                <CardContent class="flex items-center gap-4">
                   {/* Avatar */}
-                  <div class="tw:avatar tw:placeholder">
-                    <div class="tw:bg-primary tw:text-primary-content tw:w-12 tw:h-12 tw:rounded-full">
-                      <span class="tw:text-lg">
-                        {user.first_name[0]}
-                        {user.last_name[0]}
-                      </span>
-                    </div>
-                  </div>
+                  <Avatar class="size-10">
+                    <AvatarFallback>
+                      {user.first_name[0]}
+                      {user.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
 
                   {/* Info */}
-                  <div class="tw:flex-1">
+                  <div class="min-w-0 flex-1">
                     <A
                       href={`/users/${user.id}`}
-                      class="tw:font-semibold hover:tw:text-primary tw:transition-colors"
+                      class="font-semibold transition-colors hover:text-primary"
                     >
                       {user.first_name} {user.last_name}
                     </A>
-                    <p class="tw:text-sm tw:text-base-content/50">@{user.username}</p>
+                    <p class="truncate text-sm text-muted-foreground">@{user.username}</p>
                   </div>
 
                   {/* Follow Button */}
-                  <button
+                  <Button
+                    variant={followingMap()[user.id] ? 'outline' : 'default'}
+                    size="sm"
                     onClick={() => toggleFollow(user.id)}
-                    class="tw:btn tw:btn-sm"
-                    classList={{
-                      'tw:btn-outline': followingMap()[user.id],
-                      'tw:btn-primary': !followingMap()[user.id],
-                    }}
+                    class="w-28 shrink-0"
                   >
-                    <Icon
-                      icon={followingMap()[user.id] ? 'mdi:account-check' : 'mdi:account-plus'}
-                      class="tw:w-4 tw:h-4"
-                    />
+                    <Show when={followingMap()[user.id]} fallback={<UserPlus class="size-4" />}>
+                      <UserCheck class="size-4" />
+                    </Show>
                     {followingMap()[user.id] ? 'Following' : 'Follow'}
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                </CardContent>
+              </Card>
             )}
           </For>
         </div>
