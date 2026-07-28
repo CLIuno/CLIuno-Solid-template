@@ -3,7 +3,7 @@ import { A } from '@solidjs/router'
 import { LoaderCircle, UserCheck, UserPlus, Users as UsersIcon } from 'lucide-solid'
 
 import api from '@/apis'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/stores/auth'
@@ -11,6 +11,7 @@ import { useAuth } from '@/stores/auth'
 interface User {
   id: string
   username: string
+  avatar_url?: string | null
   first_name: string
   last_name: string
   email: string
@@ -94,6 +95,9 @@ const UsersPage = () => {
                 <CardContent class="flex items-center gap-4">
                   {/* Avatar */}
                   <Avatar class="size-10">
+                    <Show when={user.avatar_url}>
+                      {(src) => <AvatarImage src={src()} alt={user.username} />}
+                    </Show>
                     <AvatarFallback>
                       {user.first_name[0]}
                       {user.last_name[0]}

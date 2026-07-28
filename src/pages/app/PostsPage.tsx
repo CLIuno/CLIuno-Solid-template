@@ -3,6 +3,7 @@ import { A } from '@solidjs/router'
 import { FileText, LoaderCircle, MessageSquare, Plus, Trash2, User } from 'lucide-solid'
 
 import api from '@/apis'
+import { useImageUpload } from '@/hooks/useImageUpload'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -24,7 +25,7 @@ interface Post {
   id: string
   title: string
   content: string
-  imageUrl: string
+  image_url: string | null
   is_paid: boolean
   createdAt: string
   user: { id: string; username: string; first_name: string; last_name: string }
@@ -39,6 +40,9 @@ const PostsPage = () => {
   const [newTitle, setNewTitle] = createSignal('')
   const [newContent, setNewContent] = createSignal('')
   const [creating, setCreating] = createSignal(false)
+  const [newImageUrl, setNewImageUrl] = createSignal('')
+  const { uploading, uploadError, uploadImage } = useImageUpload()
+  const [postImageInput, setPostImageInput] = createSignal<HTMLInputElement>()
   const [filter, setFilter] = createSignal<'all' | 'mine'>('all')
 
   const filteredPosts = createMemo(() => {
@@ -58,14 +62,28 @@ const PostsPage = () => {
     }
   }
 
+  async function onPostImagePicked(event: Event) {
+    const input = event.currentTarget as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    const url = await uploadImage(file)
+    if (url) setNewImageUrl(url)
+    input.value = ''
+  }
+
   async function createPost(e: Event) {
     e.preventDefault()
     if (!newTitle().trim() || !newContent().trim()) return
     setCreating(true)
     try {
-      await api.post.createPost({ title: newTitle(), content: newContent() })
+      await api.post.createPost({
+        title: newTitle(),
+        content: newContent(),
+        ...(newImageUrl() ? { image_url: newImageUrl() } : {}),
+      })
       setNewTitle('')
       setNewContent('')
+      setNewImageUrl('')
       setShowCreateModal(false)
       await fetchPosts()
     } catch {
@@ -159,6 +177,15 @@ const PostsPage = () => {
                     <Show when={post.content}>
                       <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.content}</p>
                     </Show>
+                    <Show when={post.image_url}>
+                      {(src) => (
+                        <img
+                          src={src()}
+                          alt={post.title}
+                          class="mt-2 max-h-64 w-full rounded-md border object-cover"
+                        />
+                      )}
+                    </Show>
                     <div class="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                       <A
                         href={`/users/${post.user.id}`}
@@ -223,6 +250,49 @@ const PostsPage = () => {
                 rows="5"
                 required
               />
+            </div>
+            <div class="space-y-2">
+              <Label>Image</Label>
+              <div class="flex items-center gap-3">
+                <input
+                  ref={setPostImageInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  class="hidden"
+                  onChange={onPostImagePicked}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading()}
+                  onClick={() => postImageInput()?.click()}
+                >
+                  {uploading() ? 'Uploading…' : newImageUrl() ? 'Replace image' : 'Add image'}
+                </Button>
+                <Show when={newImageUrl()}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setNewImageUrl('')}
+                  >
+                    Remove
+                  </Button>
+                </Show>
+              </div>
+              <Show when={newImageUrl()}>
+                {(src) => (
+                  <img
+                    src={src()}
+                    alt="Selected preview"
+                    class="max-h-40 rounded-md border object-cover"
+                  />
+                )}
+              </Show>
+              <Show when={uploadError()}>
+                <p class="text-sm text-destructive">{uploadError()}</p>
+              </Show>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>

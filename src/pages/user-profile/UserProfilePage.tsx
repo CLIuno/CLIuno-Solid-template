@@ -3,7 +3,8 @@ import { A, useParams } from '@solidjs/router'
 import { ArrowLeft, LoaderCircle, UserCheck, UserPlus, Users as UsersIcon } from 'lucide-solid'
 
 import api from '@/apis'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useImageUpload } from '@/hooks/useImageUpload'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -24,6 +25,9 @@ function FollowList(props: Readonly<{ users: User[]; emptyText: string }>) {
               class="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
             >
               <Avatar>
+                <Show when={f.avatar_url}>
+                  {(src) => <AvatarImage src={src()} alt={f.username} />}
+                </Show>
                 <AvatarFallback class="text-xs">
                   {f.first_name[0]}
                   {f.last_name[0]}
@@ -54,6 +58,24 @@ const UserProfilePage = () => {
   const [isFollowing, setIsFollowing] = createSignal(false)
 
   const isOwnProfile = () => auth.user()?.id === user()?.id
+  const { uploading, uploadError, uploadImage } = useImageUpload()
+  const [avatarInput, setAvatarInput] = createSignal<HTMLInputElement>()
+
+  async function onAvatarPicked(event: Event) {
+    const input = event.currentTarget as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+
+    const url = await uploadImage(file)
+    if (url) {
+      await api.user.updateCurrentUser({ avatar_url: url })
+      await auth.fetchCurrentUser()
+      setUser((prev) => (prev ? { ...prev, avatar_url: url } : prev))
+    }
+
+    // reset so re-picking the same file still fires change
+    input.value = ''
+  }
 
   async function loadProfile() {
     setLoading(true)
@@ -135,18 +157,44 @@ const UserProfilePage = () => {
                 <CardContent class="space-y-4">
                   <div class="flex items-center gap-4">
                     {/* Avatar */}
-                    <Avatar class="size-20">
-                      <AvatarFallback class="text-2xl">
-                        {u.first_name[0]}
-                        {u.last_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div class="flex flex-col items-center gap-2">
+                      <Avatar class="size-20">
+                        <Show when={u.avatar_url}>
+                          {(src) => <AvatarImage src={src()} alt={u.username} />}
+                        </Show>
+                        <AvatarFallback class="text-2xl">
+                          {u.first_name[0]}
+                          {u.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <Show when={isOwnProfile()}>
+                        <input
+                          ref={setAvatarInput}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp,image/gif"
+                          class="hidden"
+                          onChange={onAvatarPicked}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={uploading()}
+                          onClick={() => avatarInput()?.click()}
+                        >
+                          {uploading() ? 'Uploading…' : 'Change photo'}
+                        </Button>
+                      </Show>
+                    </div>
 
                     <div class="min-w-0 flex-1">
                       <h1 class="text-2xl font-bold tracking-tight">
                         {u.first_name} {u.last_name}
                       </h1>
                       <p class="text-muted-foreground">@{u.username}</p>
+                      <Show when={uploadError()}>
+                        <p class="mt-1 text-sm text-destructive">{uploadError()}</p>
+                      </Show>
                     </div>
 
                     {/* Follow Button */}

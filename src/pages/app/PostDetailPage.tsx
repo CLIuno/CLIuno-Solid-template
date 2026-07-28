@@ -3,7 +3,7 @@ import { A, useParams } from '@solidjs/router'
 import { ArrowLeft, LoaderCircle, MessageSquare, Pencil, Send, Trash2, User } from 'lucide-solid'
 
 import api from '@/apis'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -17,17 +17,29 @@ interface Comment {
   id: string
   content: string
   createdAt: string
-  user: { id: string; username: string; first_name: string; last_name: string }
+  user: {
+    id: string
+    username: string
+    first_name: string
+    last_name: string
+    avatar_url?: string | null
+  }
 }
 
 interface Post {
   id: string
   title: string
   content: string
-  imageUrl: string
+  image_url?: string | null
   is_paid: boolean
   createdAt: string
-  user: { id: string; username: string; first_name: string; last_name: string }
+  user: {
+    id: string
+    username: string
+    first_name: string
+    last_name: string
+    avatar_url?: string | null
+  }
   comments: Comment[]
 }
 
@@ -195,6 +207,15 @@ const PostDetailPage = () => {
                         <Show when={p.content}>
                           <p class="mt-3 text-muted-foreground">{p.content}</p>
                         </Show>
+                        <Show when={p.image_url}>
+                          {(src) => (
+                            <img
+                              src={src()}
+                              alt={p.title}
+                              class="mt-3 max-h-96 w-full rounded-md border object-cover"
+                            />
+                          )}
+                        </Show>
                       </div>
                       <Show when={p.user.id === auth.user()?.id}>
                         <Button
@@ -271,6 +292,9 @@ const PostDetailPage = () => {
                         {(comment) => (
                           <div class="flex gap-3">
                             <Avatar>
+                              <Show when={comment.user.avatar_url}>
+                                {(src) => <AvatarImage src={src()} alt={comment.user.username} />}
+                              </Show>
                               <AvatarFallback class="text-xs">
                                 {comment.user.first_name[0]}
                                 {comment.user.last_name[0]}

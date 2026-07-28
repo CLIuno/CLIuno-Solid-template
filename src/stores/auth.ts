@@ -10,6 +10,7 @@ export interface User {
   last_name: string
   email: string
   phone: string
+  avatar_url?: string | null
   is_verified: boolean
 }
 

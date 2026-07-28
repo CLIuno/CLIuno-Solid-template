@@ -4,7 +4,7 @@ import { A, useNavigate } from '@solidjs/router'
 import { ChevronDown, ListTodo, LogOut, Rocket, StickyNote, User, Users } from 'lucide-solid'
 
 import ThemeToggle from '@/components/ThemeToggle'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { buttonVariants } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -80,6 +80,9 @@ const DefaultLayout: ParentComponent = (props) => {
                 class={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-2 px-1.5')}
               >
                 <Avatar class="size-7">
+                  <Show when={auth.user()?.avatar_url}>
+                    {(src) => <AvatarImage src={src()} alt={initials()} />}
+                  </Show>
                   <AvatarFallback class="text-xs">{initials()}</AvatarFallback>
                 </Avatar>
                 <span class="hidden sm:inline">{auth.user()?.username}</span>
