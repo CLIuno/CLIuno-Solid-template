@@ -37,3 +37,16 @@ Keep all URLs inside `src/apis/`.
   `src/lib/utils.ts`, theme tokens in `src/assets/index.css`, dark mode = `.dark` class
   on `<html>` + `localStorage('theme')` (see `src/utils/theme.ts`); icons from
   `lucide-solid`.
+
+## AI agents (Claude Code and friends)
+
+- **Check the CLIuno skills first**: `npx cliuno@latest skills status` — if any is
+  `missing`/`outdated`, run `npx cliuno@latest skills install` (adds `.claude/skills/cliuno-*`:
+  the generator workflow, the scaffold guide, and the shared REST contract).
+- **Generate resources, don't hand-write them**:
+  `npx cliuno@latest make:resource Product --fields name:string,price:number,inStock:boolean`
+  creates `src/apis/product-api.ts`, `src/pages/app/ProductsPage.tsx`, `src/pages/app/ProductDetailPage.tsx` and registers it in `src/apis/index.ts`, `src/App.tsx`, following this
+  template's conventions and the `{status, message, data}` contract. `--dry-run` previews,
+  re-running never duplicates registrations, `--force` overwrites.
+- Single pieces: `make:api`, `make:page`, `make:store`, `make:component`. `npx cliuno@latest make` lists them.
+- Then edit fields/business logic only, and run the gates above.
